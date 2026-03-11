@@ -78,7 +78,9 @@ services:
   # ─── Microservices ───────────────────────────────────────────────────────────
 
   notes-service:
-    build: ./notes-service
+    build:
+      context: .
+      dockerfile: notes-service/Dockerfile
     env_file:
       - path: ./notes-service/.env
         required: false
@@ -101,7 +103,9 @@ services:
     restart: unless-stopped
 
   agenda-service:
-    build: ./agenda-service
+    build:
+      context: .
+      dockerfile: agenda-service/Dockerfile
     env_file:
       - path: ./agenda-service/.env
         required: false
@@ -124,7 +128,9 @@ services:
     restart: unless-stopped
 
   action-items-service:
-    build: ./action-items-service
+    build:
+      context: .
+      dockerfile: action-items-service/Dockerfile
     env_file:
       - path: ./action-items-service/.env
         required: false
@@ -147,7 +153,9 @@ services:
     restart: unless-stopped
 
   file-service:
-    build: ./file-service
+    build:
+      context: .
+      dockerfile: file-service/Dockerfile
     env_file:
       - path: ./file-service/.env
         required: false
@@ -172,7 +180,9 @@ services:
     restart: unless-stopped
 
   polls-service:
-    build: ./polls-service
+    build:
+      context: .
+      dockerfile: polls-service/Dockerfile
     env_file:
       - path: ./polls-service/.env
         required: false

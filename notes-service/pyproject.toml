@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "Manages real-time meeting notes and annotations"
 requires-python = ">=3.11"
 dependencies = [
+    "mcp-shared>=0.1.0",
     "fastapi>=0.110.0",
     "uvicorn[standard]>=0.29.0",
     "pydantic>=2.6.0",
