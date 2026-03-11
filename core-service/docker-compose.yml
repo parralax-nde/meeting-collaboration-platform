@@ -1,0 +1,8 @@
+services:
+  core-service:
+    build: .
+    volumes:
+      # Mount a local directory so generated skeletons can be persisted.
+      - ./output:/output
+    entrypoint: ["mcp-core"]
+    command: ["--help"]
