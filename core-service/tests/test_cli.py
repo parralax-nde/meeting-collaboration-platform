@@ -216,3 +216,47 @@ class TestGenerateCommand:
             ["generate", "1invalid", "--output-dir", str(tmp_path)],
         )
         assert result.exit_code != 0
+
+    # -----------------------------------------------------------------------
+    # Shared-library integration tests
+    # -----------------------------------------------------------------------
+
+    def test_generate_requirements_contains_mcp_shared(self, runner, tmp_path):
+        runner.invoke(cli, ["generate", "notes", "--output-dir", str(tmp_path)])
+        content = (tmp_path / "notes-service" / "requirements.txt").read_text()
+        assert "mcp-shared" in content
+
+    def test_generate_pyproject_contains_mcp_shared(self, runner, tmp_path):
+        runner.invoke(cli, ["generate", "notes", "--output-dir", str(tmp_path)])
+        content = (tmp_path / "notes-service" / "pyproject.toml").read_text()
+        assert "mcp-shared" in content
+
+    def test_generate_main_py_uses_shared_logging(self, runner, tmp_path):
+        runner.invoke(cli, ["generate", "notes", "--output-dir", str(tmp_path)])
+        content = (tmp_path / "notes-service" / "src" / "notes" / "main.py").read_text()
+        assert "mcp_shared.logging" in content
+        assert "configure_logging" in content
+
+    def test_generate_main_py_uses_shared_error_handlers(self, runner, tmp_path):
+        runner.invoke(cli, ["generate", "notes", "--output-dir", str(tmp_path)])
+        content = (tmp_path / "notes-service" / "src" / "notes" / "main.py").read_text()
+        assert "mcp_shared.errors" in content
+        assert "register_error_handlers" in content
+
+    def test_generate_health_router_uses_shared_model(self, runner, tmp_path):
+        runner.invoke(cli, ["generate", "notes", "--output-dir", str(tmp_path)])
+        content = (
+            tmp_path / "notes-service" / "src" / "notes" / "routers" / "health.py"
+        ).read_text()
+        assert "mcp_shared.models" in content
+        assert "HealthResponse" in content
+
+    def test_generate_dockerfile_installs_mcp_shared(self, runner, tmp_path):
+        runner.invoke(cli, ["generate", "notes", "--output-dir", str(tmp_path)])
+        content = (tmp_path / "notes-service" / "Dockerfile").read_text()
+        assert "mcp-shared" in content
+
+    def test_generate_docker_compose_uses_root_context(self, runner, tmp_path):
+        runner.invoke(cli, ["generate", "notes", "--output-dir", str(tmp_path)])
+        content = (tmp_path / "notes-service" / "docker-compose.yml").read_text()
+        assert "context:" in content

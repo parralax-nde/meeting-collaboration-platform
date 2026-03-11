@@ -2,12 +2,16 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install dependencies first (layer caching).
-COPY requirements.txt ./
+# Install shared libraries first (layer caching).
+COPY shared-libs /tmp/mcp-shared
+RUN pip install --no-cache-dir /tmp/mcp-shared
+
+# Install service dependencies.
+COPY action-items-service/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application source.
-COPY src/ ./src/
+COPY action-items-service/src/ ./src/
 
 EXPOSE 8003
 

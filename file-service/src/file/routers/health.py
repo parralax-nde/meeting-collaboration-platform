@@ -1,14 +1,10 @@
 """Health-check router."""
 
 from fastapi import APIRouter
-from pydantic import BaseModel
+
+from mcp_shared.models import HealthResponse
 
 router = APIRouter(prefix="/health", tags=["health"])
-
-
-class HealthResponse(BaseModel):
-    status: str
-    service: str
 
 
 @router.get("", response_model=HealthResponse, summary="Health check")

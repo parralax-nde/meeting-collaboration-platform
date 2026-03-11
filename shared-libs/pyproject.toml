@@ -3,25 +3,33 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "agenda-service"
+name = "mcp-shared"
 version = "0.1.0"
-description = "Manages shared meeting agendas and scheduling"
+description = "Shared libraries for the Meeting Collaboration Platform microservices."
 requires-python = ">=3.11"
 dependencies = [
-    "mcp-shared>=0.1.0",
-    "fastapi>=0.110.0",
-    "uvicorn[standard]>=0.29.0",
     "pydantic>=2.6.0",
-    "pydantic-settings>=2.2.0",
-    "httpx>=0.27.0",
 ]
 
 [project.optional-dependencies]
+db = [
+    "sqlalchemy[asyncio]>=2.0.0",
+]
+web = [
+    "fastapi>=0.110.0",
+]
+all = [
+    "sqlalchemy[asyncio]>=2.0.0",
+    "fastapi>=0.110.0",
+]
 dev = [
     "pytest>=8.1.0",
     "pytest-asyncio>=0.23.0",
-    "httpx>=0.27.0",
     "ruff>=0.4.0",
+    "sqlalchemy[asyncio]>=2.0.0",
+    "aiosqlite>=0.20.0",
+    "fastapi>=0.110.0",
+    "httpx>=0.27.0",
 ]
 
 [tool.setuptools.packages.find]
