@@ -1,0 +1,219 @@
+# Meeting Collaboration Platform — Docker Compose
+#
+# Orchestrates all microservices, infrastructure, and the API Gateway.
+# Spin up the full stack with:
+#
+#   docker compose up --build
+#
+# For local development, copy each service's .env.example to .env before starting:
+#
+#   for svc in notes agenda action-items file polls; do
+#     cp ${svc}-service/.env.example ${svc}-service/.env
+#   done
+#
+# To generate missing service skeletons first (if needed):
+#
+#   docker compose run --rm core-service generate <SERVICE_NAME> -o /output
+
+services:
+
+  # ─── Infrastructure ──────────────────────────────────────────────────────────
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: mcp
+      POSTGRES_PASSWORD: mcp_secret
+      POSTGRES_MULTIPLE_DATABASES: notes,agenda,action_items,file,polls
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:ro
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mcp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ─── API Gateway ─────────────────────────────────────────────────────────────
+
+  api-gateway:
+    image: nginx:1.27-alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./api-gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      notes-service:
+        condition: service_healthy
+      agenda-service:
+        condition: service_healthy
+      action-items-service:
+        condition: service_healthy
+      file-service:
+        condition: service_healthy
+      polls-service:
+        condition: service_healthy
+    networks:
+      - backend
+      - frontend
+    restart: unless-stopped
+
+  # ─── Microservices ───────────────────────────────────────────────────────────
+
+  notes-service:
+    build: ./notes-service
+    env_file:
+      - path: ./notes-service/.env
+        required: false
+    environment:
+      DATABASE_URL: postgresql://mcp:mcp_secret@postgres:5432/notes
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8001/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+  agenda-service:
+    build: ./agenda-service
+    env_file:
+      - path: ./agenda-service/.env
+        required: false
+    environment:
+      DATABASE_URL: postgresql://mcp:mcp_secret@postgres:5432/agenda
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8002/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+  action-items-service:
+    build: ./action-items-service
+    env_file:
+      - path: ./action-items-service/.env
+        required: false
+    environment:
+      DATABASE_URL: postgresql://mcp:mcp_secret@postgres:5432/action_items
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8003/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+  file-service:
+    build: ./file-service
+    env_file:
+      - path: ./file-service/.env
+        required: false
+    environment:
+      DATABASE_URL: postgresql://mcp:mcp_secret@postgres:5432/file
+      REDIS_URL: redis://redis:6379/0
+    volumes:
+      - media_data:/app/media
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8004/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+  polls-service:
+    build: ./polls-service
+    env_file:
+      - path: ./polls-service/.env
+        required: false
+    environment:
+      DATABASE_URL: postgresql://mcp:mcp_secret@postgres:5432/polls
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8005/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+  # ─── Core Service (scaffolding CLI) ──────────────────────────────────────────
+
+  core-service:
+    build: ./core-service
+    volumes:
+      - .:/output
+    entrypoint: ["mcp-core"]
+    command: ["--help"]
+    profiles:
+      - tools
+
+# ─── Volumes ───────────────────────────────────────────────────────────────────
+
+volumes:
+  postgres_data:
+  redis_data:
+  media_data:
+
+# ─── Networks ──────────────────────────────────────────────────────────────────
+
+networks:
+  backend:
+  frontend:

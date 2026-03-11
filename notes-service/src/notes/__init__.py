@@ -1,0 +1,1 @@
+"""Notes microservice package."""

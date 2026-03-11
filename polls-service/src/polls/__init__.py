@@ -1,0 +1,1 @@
+"""Polls microservice package."""
