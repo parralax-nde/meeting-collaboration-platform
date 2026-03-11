@@ -1,0 +1,28 @@
+# {{ service_dir_name }}
+
+{{ description }}
+
+## Getting started
+
+### With Docker Compose (recommended)
+
+```bash
+docker compose up --build
+```
+
+The service will be available at <http://localhost:{{ port }}>.
+
+Interactive API docs: <http://localhost:{{ port }}/docs>
+
+### Local development
+
+```bash
+pip install -e '.[dev]'
+uvicorn src.{{ service_name }}.main:app --reload --port {{ port }}
+```
+
+### Running tests
+
+```bash
+pytest
+```
