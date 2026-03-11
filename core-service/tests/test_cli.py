@@ -72,6 +72,65 @@ class TestGenerateCommand:
         runner.invoke(cli, ["generate", "notes", "--output-dir", str(tmp_path)])
         assert (tmp_path / "notes-service" / "docker-compose.yml").is_file()
 
+    def test_generate_docker_compose_contains_service_name(self, runner, tmp_path):
+        runner.invoke(cli, ["generate", "notes", "--output-dir", str(tmp_path)])
+        content = (tmp_path / "notes-service" / "docker-compose.yml").read_text()
+        assert "notes:" in content
+
+    def test_generate_docker_compose_contains_postgres(self, runner, tmp_path):
+        runner.invoke(cli, ["generate", "notes", "--output-dir", str(tmp_path)])
+        content = (tmp_path / "notes-service" / "docker-compose.yml").read_text()
+        assert "postgres:" in content
+
+    def test_generate_docker_compose_contains_redis(self, runner, tmp_path):
+        runner.invoke(cli, ["generate", "notes", "--output-dir", str(tmp_path)])
+        content = (tmp_path / "notes-service" / "docker-compose.yml").read_text()
+        assert "redis:" in content
+
+    def test_generate_docker_compose_contains_healthcheck(self, runner, tmp_path):
+        runner.invoke(cli, ["generate", "notes", "--output-dir", str(tmp_path)])
+        content = (tmp_path / "notes-service" / "docker-compose.yml").read_text()
+        assert "healthcheck:" in content
+
+    def test_generate_docker_compose_contains_depends_on(self, runner, tmp_path):
+        runner.invoke(cli, ["generate", "notes", "--output-dir", str(tmp_path)])
+        content = (tmp_path / "notes-service" / "docker-compose.yml").read_text()
+        assert "depends_on:" in content
+
+    def test_generate_docker_compose_contains_volumes(self, runner, tmp_path):
+        runner.invoke(cli, ["generate", "notes", "--output-dir", str(tmp_path)])
+        content = (tmp_path / "notes-service" / "docker-compose.yml").read_text()
+        assert "volumes:" in content
+
+    def test_generate_docker_compose_contains_networks(self, runner, tmp_path):
+        runner.invoke(cli, ["generate", "notes", "--output-dir", str(tmp_path)])
+        content = (tmp_path / "notes-service" / "docker-compose.yml").read_text()
+        assert "networks:" in content
+
+    def test_generate_docker_compose_renders_database_url(self, runner, tmp_path):
+        runner.invoke(cli, ["generate", "notes", "--output-dir", str(tmp_path)])
+        content = (tmp_path / "notes-service" / "docker-compose.yml").read_text()
+        assert "DATABASE_URL" in content
+        assert "notes" in content
+
+    def test_generate_docker_compose_renders_port(self, runner, tmp_path):
+        runner.invoke(
+            cli,
+            ["generate", "notes", "--output-dir", str(tmp_path), "--port", "9000"],
+        )
+        content = (tmp_path / "notes-service" / "docker-compose.yml").read_text()
+        assert "9000" in content
+
+    def test_generate_env_example_contains_database_url(self, runner, tmp_path):
+        runner.invoke(cli, ["generate", "notes", "--output-dir", str(tmp_path)])
+        content = (tmp_path / "notes-service" / ".env.example").read_text()
+        assert "DATABASE_URL" in content
+
+    def test_generate_env_example_contains_redis_url(self, runner, tmp_path):
+        runner.invoke(cli, ["generate", "notes", "--output-dir", str(tmp_path)])
+        content = (tmp_path / "notes-service" / ".env.example").read_text()
+        assert "REDIS_URL" in content
+
     def test_generate_creates_pyproject_toml(self, runner, tmp_path):
         runner.invoke(cli, ["generate", "notes", "--output-dir", str(tmp_path)])
         assert (tmp_path / "notes-service" / "pyproject.toml").is_file()
